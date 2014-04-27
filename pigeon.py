@@ -6,6 +6,7 @@ import urllib
 import csv
 import sys
 import json
+import socket
 
 AK = "OZPNC51CMPEyD65Qzk2L2x5y"
 
@@ -42,15 +43,60 @@ def get_distance(points, tactics = 12, ak = AK, mode='driving', coord_type = 'wg
         data = urllib.urlencode(values)
         url = api_url + '?' + data
         #print url
-        response = urllib2.urlopen(url)
-        json_res = response.read()
-        res = json.loads(json_res)
-        #print "status: ", res['status'], "message: ", res['message']
-        distance += res['result']['elements'][0]['distance']['value']
-        duration += res['result']['elements'][0]['duration']['value']
+        max_try_num = 5
+        response = None
+        for tries in range(5):
+            try:
+                response = urllib2.urlopen(url, timeout=1)
+            except urllib2.URLError:
+                print "network error"
+                if tries < (max_try_num -1):
+                    continue
+                else:
+                    print "GET timeout because of newwork unstable!"
+                    print "Error URL: ", url
+                    distance = 0
+                    duration = 0
+                    break
+            except urllib2.URLError, e:
+                if isinstance(e.reason, socket.timeout):
+                    print "timeout error 1"
+                else:
+                    raise
 
-    #print distance, duration
-    return distance, duration
+                if tries < (max_try_num -1):
+                    continue
+                else:
+                    print "GET timeout because of newwork unstable!"
+                    print "Error URL: ", url
+                    distance = 0
+                    duration = 0
+                    break
+            except socket.timeout, e:
+                print "timeout error 2"
+                if tries < (max_try_num -1):
+                    continue
+                else:
+                    print "GET timeout because of newwork unstable!"
+                    print "Error URL: ", url
+                    distance = 0
+                    duration = 0
+                    break
+
+        if response != None:
+            json_res = response.read()
+            res = json.loads(json_res)
+            if res['status'] == 0:
+                #print "status: ", res['status'], "message: ", res['message']
+                distance += res['result']['elements'][0]['distance']['value']
+                duration += res['result']['elements'][0]['duration']['value']
+
+                #print distance, duration
+                return distance, duration
+            else:
+                return None, None
+        else:
+            return None, None
 
 if __name__ == "__main__":
     reader = csv.reader(open(sys.argv[1]))
