@@ -1,0 +1,9 @@
+## 使用说明
+
+命令格式：
+    
+    python pigeon.py [输入数据CSV文件] [输出数据CSV文件]
+    
+示例：
+    
+    python pigeon.py input_test.csv output_test.csv
