@@ -27,6 +27,7 @@ def get_distance(points, tactics = 12, ak = AK, mode='driving', coord_type = 'wg
     distance = 0
     duration = 0
     for i in range(len(points)-1):
+        print "point: %d" % i
         origin_str = str(points[i]['n']) + ',' + str(points[i]['e'])
         dest_str = str(points[i+1]['n']) + ',' + str(points[i+1]['e'])
         # 传递给API的查询参数
@@ -42,12 +43,12 @@ def get_distance(points, tactics = 12, ak = AK, mode='driving', coord_type = 'wg
 
         data = urllib.urlencode(values)
         url = api_url + '?' + data
-        #print url
+        print url
         max_try_num = 5
         response = None
         for tries in range(5):
             try:
-                response = urllib2.urlopen(url, timeout=1)
+                response = urllib2.urlopen(url, timeout = 3)
             except urllib2.URLError:
                 print "network error"
                 if tries < (max_try_num -1):
@@ -57,7 +58,7 @@ def get_distance(points, tactics = 12, ak = AK, mode='driving', coord_type = 'wg
                     print "Error URL: ", url
                     distance = 0
                     duration = 0
-                    break
+                    return None, None
             except urllib2.URLError, e:
                 if isinstance(e.reason, socket.timeout):
                     print "timeout error 1"
@@ -71,8 +72,9 @@ def get_distance(points, tactics = 12, ak = AK, mode='driving', coord_type = 'wg
                     print "Error URL: ", url
                     distance = 0
                     duration = 0
-                    break
-            except socket.timeout, e:
+                    return None, None
+
+            except socket.timeout:
                 print "timeout error 2"
                 if tries < (max_try_num -1):
                     continue
@@ -81,22 +83,21 @@ def get_distance(points, tactics = 12, ak = AK, mode='driving', coord_type = 'wg
                     print "Error URL: ", url
                     distance = 0
                     duration = 0
-                    break
+                    return None, None
 
         if response != None:
             json_res = response.read()
             res = json.loads(json_res)
-            if res['status'] == 0:
-                #print "status: ", res['status'], "message: ", res['message']
+            if res['status'] == 0 and not (res['result']['elements'][0]['distance']['value'] is None) and  not (res['result']['elements'][0]['duration']['value'] is None):
+                print "status: ", res['status'], "message: ", res['message']
                 distance += res['result']['elements'][0]['distance']['value']
                 duration += res['result']['elements'][0]['duration']['value']
-
-                #print distance, duration
-                return distance, duration
             else:
                 return None, None
         else:
             return None, None
+
+    return distance, duration
 
 if __name__ == "__main__":
     reader = csv.reader(open(sys.argv[1]))
