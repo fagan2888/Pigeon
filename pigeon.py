@@ -43,7 +43,7 @@ def get_distance(points, tactics = 12, ak = AK, mode='driving', coord_type = 'wg
 
         data = urllib.urlencode(values)
         url = api_url + '?' + data
-        print url
+        #print url
         max_try_num = 5
         response = None
         for tries in range(5):
@@ -74,7 +74,7 @@ def get_distance(points, tactics = 12, ak = AK, mode='driving', coord_type = 'wg
                     duration = 0
                     return None, None
 
-            except socket.timeout:
+            except socket.timeout, socket.error:
                 print "timeout error 2"
                 if tries < (max_try_num -1):
                     continue
@@ -88,7 +88,7 @@ def get_distance(points, tactics = 12, ak = AK, mode='driving', coord_type = 'wg
         if response != None:
             json_res = response.read()
             res = json.loads(json_res)
-            if res['status'] == 0 and not (res['result']['elements'][0]['distance']['value'] is None) and  not (res['result']['elements'][0]['duration']['value'] is None):
+            if res['status'] == 0 and not (res['result']['elements'][0] is None):
                 print "status: ", res['status'], "message: ", res['message']
                 distance += res['result']['elements'][0]['distance']['value']
                 duration += res['result']['elements'][0]['duration']['value']
