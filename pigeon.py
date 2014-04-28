@@ -88,11 +88,17 @@ def get_distance(points, tactics = 12, ak = AK, mode='driving', coord_type = 'wg
         if response != None:
             json_res = response.read()
             res = json.loads(json_res)
-            if res['status'] == 0 and not (res['result']['elements'][0] is None):
-                print "status: ", res['status'], "message: ", res['message']
-                distance += res['result']['elements'][0]['distance']['value']
-                duration += res['result']['elements'][0]['duration']['value']
-            else:
+            try:
+                if res['status'] == 0 and not (res['result']['elements'][0] is None):
+                    print "status: ", res['status'], "message: ", res['message']
+                    distance += res['result']['elements'][0]['distance']['value']
+                    duration += res['result']['elements'][0]['duration']['value']
+                else:
+                    return None, None
+            except KeyError:
+                print "longitude and latitude is invalid!Please check it! : )"
+                distance = 0
+                duration = 0
                 return None, None
         else:
             return None, None
